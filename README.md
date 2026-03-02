@@ -17,7 +17,11 @@
 ### 1. Клонирование шаблона
 
 ```bash
+<<<<<<< HEAD
 git clone --depth=1 git@github.com:MoM-Repo/catalog-service.git YOUR_PROJECT_NAME
+=======
+git clone --depth=1 git@github.com:MoM-Repo/mom-boilerplate.git YOUR_PROJECT_NAME
+>>>>>>> 4dd41921cf8b5341806fb2b0f67c5ff30d264719
 cd YOUR_PROJECT_NAME
 ```
 

@@ -105,7 +105,11 @@ formatters:
       sections:
         - standard
         - default
+<<<<<<< HEAD
         - prefix(github.com/AlexBond702/catalog-service)
+=======
+        - prefix(github.com/MoM-Repo/mom-boilerplate)
+>>>>>>> 4dd41921cf8b5341806fb2b0f67c5ff30d264719
         - blank
         - dot
       custom-order: true
