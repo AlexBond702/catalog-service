@@ -4,10 +4,7 @@
 OUTPUT := ./bin/app
 GO_LINT_VERSION := 2.7.2
 GO_FILE := ./main.go
-<<<<<<< HEAD
 GO_EXE := ./app
-=======
->>>>>>> 4dd41921cf8b5341806fb2b0f67c5ff30d264719
 
 # =============================================================================
 # Справка
@@ -20,29 +17,16 @@ help: ## Показать справку
 # Разработка
 # =============================================================================
 .PHONY: run
-<<<<<<< HEAD
 run: ## Сборка и запуск приложения
 	go build -o ${OUTPUT} ${GO_FILE} && go run ${GO_FILE}
-=======
-run: ## Запустить приложение
-	go run ${GO_FILE}
-
-.PHONY: build
-build: ## Сборка приложения
-	go build -o ${OUTPUT} ${GO_FILE}
->>>>>>> 4dd41921cf8b5341806fb2b0f67c5ff30d264719
 
 .PHONY: test
 test: ## Запуск тестов
 	go test -count=1 -v ./...
-
-<<<<<<< HEAD
 .PHONY: clear
 clear: ## Удаление бинарного файла
 	rm -f ${OUTPUT} ${GO_EXE}
 
-=======
->>>>>>> 4dd41921cf8b5341806fb2b0f67c5ff30d264719
 # =============================================================================
 # Качество кода
 # =============================================================================
@@ -93,11 +77,7 @@ ci: ## Запустить все CI проверки
 	@echo ""
 	@echo "=== Build ==="
 	@mkdir -p ./bin
-<<<<<<< HEAD
 	go build -o ./bin/app && go run ./main.go
-=======
-	go build -o ./bin/ -v ./...
->>>>>>> 4dd41921cf8b5341806fb2b0f67c5ff30d264719
 	@echo ""
 	@echo "=== Test ==="
 	go test -race -coverprofile=coverage.out -covermode=atomic ./...
