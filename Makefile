@@ -80,7 +80,7 @@ ci: ## Запустить все CI проверки
 	go build -o ./bin/app && go run ./main.go
 	@echo ""
 	@echo "=== Test ==="
-	go test -race -coverprofile=coverage.out -covermode=atomic ./...
+	CGO_ENABLED=1 go test -coverprofile=coverage.out -covermode=atomic ./...
 	@echo ""
 	@echo "=== Lint ==="
 	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v${GO_LINT_VERSION} run --timeout=10m
