@@ -1,9 +1,0 @@
-mode: atomic
-github.com/AlexBond702/catalog-service/internal/app/config/config.go:20.13,21.46 1 0
-github.com/AlexBond702/catalog-service/internal/app/config/config.go:21.46,23.3 1 0
-github.com/AlexBond702/catalog-service/internal/app/config/config.go:24.2,24.56 1 0
-github.com/AlexBond702/catalog-service/internal/app/config/config.go:24.56,26.3 1 0
-github.com/AlexBond702/catalog-service/main.go:9.13,22.2 5 0
-github.com/AlexBond702/catalog-service/internal/app/util/duration.go:12.51,14.16 2 0
-github.com/AlexBond702/catalog-service/internal/app/util/duration.go:14.16,16.3 1 0
-github.com/AlexBond702/catalog-service/internal/app/util/duration.go:17.2,18.12 2 0
