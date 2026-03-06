@@ -21,27 +21,27 @@ func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *httpProc 
 	r.NotFoundHandler = http.HandlerFunc(handlerNotFound)
 	vGenericRegHealthCheck(r, hHealth)
 
-	p := httpProc{
-		addr: fmt.Sprintf(":%d", cfg.ListenPort),
-	}
 	_ = r.Walk(func(route *mux.Route, router *mux.Router, sl []*mux.Route) error {
 		path, _ := route.GetPathTemplate()
-		if path == "" {
-			log.Debug().Msg("Empty path")
-			return nil
-		}
-		log.Debug().Str("Path", path).Msg("Path")
-		return nil
-	})
-	_ = r.Walk(func(route *mux.Route, router *mux.Router, sl []*mux.Route) error {
 		methods, _ := route.GetMethods()
 		if len(methods) == 0 {
 			log.Debug().Msg("Empty method")
 			return nil
 		}
+
+		if path == "" {
+			log.Debug().Msg("Empty path")
+			return nil
+		}
+		log.Debug().Str("Path", path).Msg("Path")
 		log.Debug().Strs("Methods", methods).Msg("Methods")
 		return nil
 	})
+
+	p := httpProc{
+		addr: fmt.Sprintf(":%d", cfg.ListenPort),
+	}
+
 	p.server.Addr = p.addr
 	p.server.Handler = r
 	return &p
