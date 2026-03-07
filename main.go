@@ -1,9 +1,11 @@
 package main
 
 import (
-	"log"
+	"github.com/rs/zerolog/log"
 
 	"github.com/AlexBond702/catalog-service/internal/app/config"
+	rhealth "github.com/AlexBond702/catalog-service/internal/app/handler/health"
+	rprocessor "github.com/AlexBond702/catalog-service/internal/app/processor/http"
 )
 
 func main() {
@@ -11,12 +13,10 @@ func main() {
 
 	cfg := config.Root
 
-	log.Printf("Server will started on port: %d", cfg.Processor.WebServer.ListenPort)
-	log.Printf("Database: %s@%s/%s",
-		cfg.Repository.Postgres.Username,
-		cfg.Repository.Postgres.Address,
-		cfg.Repository.Postgres.Name)
-	log.Printf("Environment: %s, LogLevel: %s",
-		cfg.Monitor.Environment,
-		cfg.Monitor.LogLevel)
+	hHealth := rhealth.NewHandler()
+
+	httpServer := rprocessor.NewHttp(hHealth, cfg.Processor.WebServer)
+	if err := httpServer.Serve(); err != nil {
+		log.Fatal().Err(err).Msg("HTTP server failed")
+	}
 }
