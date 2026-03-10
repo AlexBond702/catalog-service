@@ -7,11 +7,12 @@ type (
 		Postgres RepositoryPostgres
 	}
 	RepositoryPostgres struct {
-		Address      string        `required:"true"`
-		Username     string        `required:"true"`
-		Password     string        `required:"true"`
-		Name         string        `required:"true"`
-		ReadTimeout  util.Duration `split_words:"true" required:"true"`
-		WriteTimeout util.Duration `split_words:"true" required:"true"`
+		Address        string        `required:"true"`
+		Username       string        `required:"true"`
+		Password       string        `required:"true"`
+		Name           string        `required:"true"`
+		ReadTimeout    util.Duration `split_words:"true" required:"true"`
+		WriteTimeout   util.Duration `split_words:"true" required:"true"`
+		MigrationTable string        `split_words:"true" default:"schema_migration"`
 	}
 )
