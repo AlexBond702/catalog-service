@@ -3,7 +3,6 @@ package pproduct
 import (
 	"context"
 	"database/sql"
-	"fmt"
 
 	"github.com/google/uuid"
 
@@ -25,16 +24,16 @@ func NewRepoFromPostgres(client *rcpostgres.Client) repository.Product {
 }
 
 func (r *repoPg) Create(ctx context.Context, product entity.Product) error {
-	_, err := r.GetRawBunDb().NewInsert().Model(&product).Exec(ctx)
+	_, err := r._DB.GetRawBunDb().NewInsert().Model(&product).Exec(ctx)
 	if err != nil {
-		return fmt.Errorf("failed to create: %w", err)
+		return err
 	}
 	return nil
 }
 
 func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Product, error) {
 	var prod entity.Product
-	err := r.GetRawBunDb().NewSelect().Model(&prod).Where("guid = ?", guid).Scan(ctx)
+	err := r._DB.GetRawBunDb().NewSelect().Model(&prod).Where("guid = ?", guid).Scan(ctx)
 	if err != nil {
 		return entity.Product{}, util.ReplaceErr1(err, sql.ErrNoRows, entity.ErrNotFound)
 	}
@@ -42,35 +41,29 @@ func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Product,
 }
 
 func (r *repoPg) Update(ctx context.Context, product entity.Product) error {
-	result, err := r.GetRawBunDb().NewUpdate().Model(&product).WherePK().ExcludeColumn("id", "created_at").Exec(ctx)
-	if err != nil {
-		return rcpostgres.UpdateErr(result, err)
-	}
-	return nil
+	result, err := r._DB.GetRawBunDb().NewUpdate().Model(&product).WherePK().ExcludeColumn("id", "created_at").Exec(ctx)
+	return rcpostgres.UpdateErr(result, err)
 }
 
 func (r *repoPg) Delete(ctx context.Context, guid uuid.UUID) error {
-	_, err := r.GetRawBunDb().NewDelete().Model((*entity.Product)(nil)).Where("guid =?", guid).Exec(ctx)
-	if err != nil {
-		return rcpostgres.DeleteErr(err)
-	}
-	return nil
+	_, err := r._DB.GetRawBunDb().NewDelete().Model((*entity.Product)(nil)).Where("guid =?", guid).Exec(ctx)
+	return rcpostgres.DeleteErr(err)
 }
 
 func (r *repoPg) List(ctx context.Context, name *string, categoryGUID *uuid.UUID) ([]entity.Product, error) {
 	var products []entity.Product
-	query := r.GetRawBunDb().NewSelect().Model(&products)
+	query := r._DB.GetRawBunDb().NewSelect().Model(&products)
 
 	if name != nil {
 		query = query.Where("name = ?", *name)
 	}
 
 	if categoryGUID != nil {
-		query = query.Where("guid = ?", *categoryGUID)
+		query = query.Where("category_guid = ?", *categoryGUID)
 	}
 	err := query.Scan(ctx)
 	if err != nil {
-		return products, err
+		return nil, err
 	}
 	return products, nil
 }
