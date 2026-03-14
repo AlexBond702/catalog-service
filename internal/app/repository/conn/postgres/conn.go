@@ -62,10 +62,12 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 		return nil,
 			fmt.Errorf("failed connection ping: %w", err)
 	}
-	return &Client{
+	c := Client{
 		rawBunDB: bunDB,
 		cfg:      cfg,
-	}, nil
+	}
+	c._bunDB = bunDB
+	return &c, nil
 }
 
 func (c *Client) Migrate(ctx context.Context) (oldVer, newVer int64, err error) {
