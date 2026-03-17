@@ -1,4 +1,4 @@
-package rhealth
+package hhealth
 
 import (
 	"net/http"

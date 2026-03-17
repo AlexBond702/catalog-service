@@ -9,6 +9,7 @@ import (
 
 	"github.com/AlexBond702/catalog-service/internal/app/config/section"
 	rhandler "github.com/AlexBond702/catalog-service/internal/app/handler"
+	rhandler2 "github.com/AlexBond702/catalog-service/internal/app/handler/http"
 )
 
 type httpProc struct {
@@ -16,11 +17,17 @@ type httpProc struct {
 	addr   string
 }
 
-func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer) *httpProc {
+func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer, hCategory rhandler2.Category, hProduct rhandler2.Product) *httpProc {
 	r := mux.NewRouter()
 	r.NotFoundHandler = http.HandlerFunc(handlerNotFound)
 	vGenericRegHealthCheck(r, hHealth)
-
+	rV1 := r.PathPrefix("/v1").Subrouter()
+	if hCategory != nil {
+		v1CategoryHandler(rV1, hCategory)
+	}
+	if hProduct != nil {
+		v1ProductHandler(rV1, hProduct)
+	}
 	_ = r.Walk(func(route *mux.Route, router *mux.Router, sl []*mux.Route) error {
 		path, _ := route.GetPathTemplate()
 		methods, _ := route.GetMethods()
