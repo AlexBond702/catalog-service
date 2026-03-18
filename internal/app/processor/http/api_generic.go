@@ -5,7 +5,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	rhandler "github.com/AlexBond702/catalog-service/internal/app/handler"
+	rhandler "github.com/AlexBond702/catalog-service/internal/app/handler/http"
 )
 
 func vGenericRegHealthCheck(r *mux.Router, h rhandler.Health) {

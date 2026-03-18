@@ -8,8 +8,7 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/AlexBond702/catalog-service/internal/app/config/section"
-	rhandler "github.com/AlexBond702/catalog-service/internal/app/handler"
-	rhandler2 "github.com/AlexBond702/catalog-service/internal/app/handler/http"
+	rhandler "github.com/AlexBond702/catalog-service/internal/app/handler/http"
 )
 
 type httpProc struct {
@@ -17,7 +16,7 @@ type httpProc struct {
 	addr   string
 }
 
-func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer, hCategory rhandler2.Category, hProduct rhandler2.Product) *httpProc {
+func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer, hCategory rhandler.Category, hProduct rhandler.Product) *httpProc {
 	r := mux.NewRouter()
 	r.NotFoundHandler = http.HandlerFunc(handlerNotFound)
 	vGenericRegHealthCheck(r, hHealth)

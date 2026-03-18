@@ -17,4 +17,7 @@ type (
 		Delete(w http.ResponseWriter, r *http.Request)
 		List(w http.ResponseWriter, r *http.Request)
 	}
+	Health interface {
+		LastCheck(w http.ResponseWriter, r *http.Request)
+	}
 )

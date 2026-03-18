@@ -6,8 +6,8 @@ import (
 	"github.com/rs/zerolog/log"
 
 	"github.com/AlexBond702/catalog-service/internal/app/config"
-	hhealth "github.com/AlexBond702/catalog-service/internal/app/handler/health"
 	hcategory "github.com/AlexBond702/catalog-service/internal/app/handler/http/category"
+	"github.com/AlexBond702/catalog-service/internal/app/handler/http/health"
 	"github.com/AlexBond702/catalog-service/internal/app/handler/http/product"
 	rprocessor "github.com/AlexBond702/catalog-service/internal/app/processor/http"
 	pcategory "github.com/AlexBond702/catalog-service/internal/app/repository/category"

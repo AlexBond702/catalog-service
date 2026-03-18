@@ -3,7 +3,7 @@ package hhealth
 import (
 	"net/http"
 
-	"github.com/AlexBond702/catalog-service/internal/app/handler"
+	rhandler "github.com/AlexBond702/catalog-service/internal/app/handler/http"
 )
 
 type handler struct{}
