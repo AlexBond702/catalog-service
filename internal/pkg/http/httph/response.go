@@ -16,7 +16,7 @@ func SendJSON(w http.ResponseWriter, status int, data interface{}) {
 }
 
 func SendEmpty(w http.ResponseWriter, status int) {
-	w.WriteHeader(status)
+	SendRaw(w, status, "", nil)
 }
 
 func SendError(w http.ResponseWriter, status int, err error) {
@@ -25,4 +25,16 @@ func SendError(w http.ResponseWriter, status int, err error) {
 	if err := json.NewEncoder(w).Encode(map[string]string{"error": err.Error()}); err != nil {
 		log.Println("failed to encode")
 	}
+}
+
+func SendEncodeWithMIME(w http.ResponseWriter, r *http.Request, statusCode int, mimeType string, obj any) {
+	SendRaw(w, statusCode, mimeType, nil)
+	if err := EncodeJSON(w, obj); err != nil {
+		ErrorApply(w, statusCode, err.Error())
+		return
+	}
+}
+
+func SendEncoded(w http.ResponseWriter, r *http.Request, statusCode int, obj any) {
+	SendEncodeWithMIME(w, r, statusCode, MIMEApplicationJSONCharsetUTF8, obj)
 }
