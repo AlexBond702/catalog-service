@@ -1,7 +1,6 @@
 package hproduct
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/AlexBond702/catalog-service/internal/app/entity"
 	rhandler "github.com/AlexBond702/catalog-service/internal/app/handler/http"
 	"github.com/AlexBond702/catalog-service/internal/app/service"
+	"github.com/AlexBond702/catalog-service/internal/pkg/binding"
 	"github.com/AlexBond702/catalog-service/internal/pkg/http/httph"
 )
 
@@ -24,21 +24,12 @@ func NewHandler(svcService service.Product) rhandler.Product {
 
 func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req entity.RequestProductCreate
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
 		httph.SendError(w, http.StatusBadRequest, entity.ErrIncorrectParameters)
-		return
 	}
-
-	if err := req.Validate(); err != nil {
-		httph.SendError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	product, err := h.svcService.Create(r.Context(), req)
+	category, err := h.svcService.Create(r.Context(), req)
 	if err != nil {
 		switch {
-		case errors.Is(err, entity.ErrNotFound):
-			httph.SendError(w, http.StatusNotFound, err)
 		case errors.Is(err, entity.ErrAlreadyExists):
 			httph.SendError(w, http.StatusBadRequest, err)
 		default:
@@ -46,15 +37,11 @@ func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-
-	resp := entity.ResponseProduct{
-		GUID:         product.GUID,
-		Name:         product.Name,
-		Description:  product.Description,
-		Price:        product.Price,
-		CategoryGUID: product.CategoryGUID,
-		CreatedAt:    product.CreatedAt,
-		UpdatedAt:    product.UpdatedAt,
+	resp := entity.ResponseCategory{
+		GUID:      category.GUID,
+		Name:      category.Name,
+		CreatedAt: category.CreatedAt,
+		UpdatedAt: category.UpdatedAt,
 	}
 	httph.SendJSON(w, http.StatusCreated, resp)
 }
@@ -96,11 +83,9 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var req entity.RequestProductUpdate
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
 		httph.SendError(w, http.StatusBadRequest, entity.ErrIncorrectParameters)
-		return
 	}
-
 	product, err := h.svcService.Update(r.Context(), guid, req)
 	if err != nil {
 		switch {

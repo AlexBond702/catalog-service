@@ -1,7 +1,6 @@
 package hcategory
 
 import (
-	"encoding/json"
 	"errors"
 	"net/http"
 
@@ -11,6 +10,7 @@ import (
 	"github.com/AlexBond702/catalog-service/internal/app/entity"
 	rhandler "github.com/AlexBond702/catalog-service/internal/app/handler/http"
 	"github.com/AlexBond702/catalog-service/internal/app/service"
+	"github.com/AlexBond702/catalog-service/internal/pkg/binding"
 	"github.com/AlexBond702/catalog-service/internal/pkg/http/httph"
 )
 
@@ -24,12 +24,8 @@ func NewHandler(svcService service.Category) rhandler.Category {
 
 func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req entity.RequestCategoryCreate
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
 		httph.SendError(w, http.StatusBadRequest, entity.ErrIncorrectParameters)
-		return
-	}
-	if err := req.Validate(); err != nil {
-		httph.SendError(w, http.StatusBadRequest, err)
 		return
 	}
 	category, err := h.svcService.Create(r.Context(), req)
@@ -84,12 +80,9 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 		httph.SendError(w, http.StatusBadRequest, err)
 	}
 	var req entity.RequestCategoryUpdate
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+
+	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
 		httph.SendError(w, http.StatusBadRequest, entity.ErrIncorrectParameters)
-		return
-	}
-	if err := req.Validate(); err != nil {
-		httph.SendError(w, http.StatusBadRequest, err)
 		return
 	}
 	category, err := h.svcService.Update(r.Context(), guid, req)
