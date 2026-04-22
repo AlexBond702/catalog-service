@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"os"
 
 	"github.com/rs/zerolog/log"
 
@@ -18,9 +19,15 @@ import (
 )
 
 func main() {
-	config.Load()
+	config.Load(config.LoadArgs{
+		Output:          os.Stdout,
+		EnableSimpleLog: false,
+		SkipConfig:      false,
+	})
 	cfg := config.Root
 	ctx := context.Background()
+	log.Info().Msg("Application started")
+	log.Debug().Msg("This is debug message")
 
 	pgClient, err := rcpostgres.NewConn(ctx, cfg.Repository.Postgres)
 	if err != nil {

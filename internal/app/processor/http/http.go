@@ -9,6 +9,9 @@ import (
 
 	"github.com/AlexBond702/catalog-service/internal/app/config/section"
 	rhandler "github.com/AlexBond702/catalog-service/internal/app/handler/http"
+	"github.com/AlexBond702/catalog-service/internal/app/util"
+	"github.com/AlexBond702/catalog-service/internal/pkg/http/httph"
+	"github.com/AlexBond702/catalog-service/internal/pkg/http/mzerolog"
 )
 
 type httpProc struct {
@@ -18,6 +21,10 @@ type httpProc struct {
 
 func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer, hCategory rhandler.Category, hProduct rhandler.Product) *httpProc {
 	r := mux.NewRouter()
+	r.Use(
+		httph.NewErrorMiddleware(),
+		mzerolog.NewMiddleware(mzerolog.WithSkipper(util.IsFilteredHttpRoute)),
+	)
 	r.NotFoundHandler = http.HandlerFunc(handlerNotFound)
 	vGenericRegHealthCheck(r, hHealth)
 	rV1 := r.PathPrefix("/v1").Subrouter()
