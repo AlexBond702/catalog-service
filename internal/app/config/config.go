@@ -20,7 +20,7 @@ type (
 		Monitor    section.Monitor
 	}
 	LoadArgs struct {
-		Output          io.Writer `json:"_"`
+		Output          io.Writer `json:"-"`
 		EnableSimpleLog bool
 		SkipConfig      bool
 	}
@@ -44,19 +44,21 @@ func Load(args LoadArgs) {
 		return
 	}
 
-	if err := godotenv.Load(".env"); err != nil {
-		log.Fatal().Err(err).Msg("Error loading .env file")
+	if err := godotenv.Load(); err != nil {
+		log.Warn().Err(err).Msg("Error loading .env file")
 	}
 	if err := envconfig.Process("APP", &Root); err != nil {
 		log.Fatal().Err(err).Msg("Failed to parse")
 	}
-	level, err := zerolog.ParseLevel(Root.Monitor.LogLevel)
-	if err != nil {
-		log.Info().Msgf("failed parsing level: %s", level)
+	level := zerolog.DebugLevel
+	if levelLog, err := zerolog.ParseLevel(Root.Monitor.LogLevel); err == nil {
+		level = levelLog
+	} else {
+		log.Warn().Msgf("failed parsing level: %s", level)
 	}
 
 	log.Logger = createLogger(level, args.Output)
-	log.Debug().Msgf("Logger initialized with %s level", level)
+	log.Info().Msgf("Logger initialized with %s level", level)
 }
 
 func createLogger(level zerolog.Level, output io.Writer) zerolog.Logger {

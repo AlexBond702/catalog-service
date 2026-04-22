@@ -1,7 +1,6 @@
 package mzerolog
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -28,7 +27,6 @@ func (m *middleware) Callback(next http.Handler) http.Handler {
 		start := time.Now()
 		next.ServeHTTP(w, r)
 		err := httph.ErrorGet(r)
-		fmt.Printf("DEBUG ErrorGet='%v' (nil=%t)\n", err, err == nil)
 		execTime := time.Since(start)
 
 		if m.fromOption.skipper(r) {
