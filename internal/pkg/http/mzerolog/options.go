@@ -40,3 +40,59 @@ func NewMiddleware(opts ...Option) httph.Middleware {
 func defaultSkipper(_ *http.Request) bool {
 	return false
 }
+
+func WithStringExtractor(key string, callback CallBackExtractorString) Option {
+	return func(m *middleware) {
+		if key != "" && callback != nil {
+			ext := ExtractorStr{key, callback}
+			m.fromOption.extStrOnSuccess = append(m.fromOption.extStrOnSuccess, ext)
+			m.fromOption.extStrOnFail = append(m.fromOption.extStrOnFail, ext)
+		}
+	}
+}
+
+func WithStringExtractorOnSuccess(key string, callback CallBackExtractorString) Option {
+	return func(m *middleware) {
+		if key != "" && callback != nil {
+			ext := ExtractorStr{key, callback}
+			m.fromOption.extStrOnSuccess = append(m.fromOption.extStrOnSuccess, ext)
+		}
+	}
+}
+
+func WithStringExtractorOnFail(key string, callback CallBackExtractorString) Option {
+	return func(m *middleware) {
+		if key != "" && callback != nil {
+			ext := ExtractorStr{key, callback}
+			m.fromOption.extStrOnFail = append(m.fromOption.extStrOnFail, ext)
+		}
+	}
+}
+
+func WithAnyExtractor(key string, callback CallBackExtractorAny) Option {
+	return func(m *middleware) {
+		if key != "" && callback != nil {
+			ext := ExtractorAny{key, callback}
+			m.fromOption.extAnyOnSuccess = append(m.fromOption.extAnyOnSuccess, ext)
+			m.fromOption.extAnyOnFail = append(m.fromOption.extAnyOnFail, ext)
+		}
+	}
+}
+
+func WithAnyExtractorOnSuccess(key string, callback CallBackExtractorAny) Option {
+	return func(m *middleware) {
+		if key != "" && callback != nil {
+			ext := ExtractorAny{key, callback}
+			m.fromOption.extAnyOnSuccess = append(m.fromOption.extAnyOnSuccess, ext)
+		}
+	}
+}
+
+func WithAnyExtractorOnFail(key string, callback CallBackExtractorAny) Option {
+	return func(m *middleware) {
+		if key != "" && callback != nil {
+			ext := ExtractorAny{key, callback}
+			m.fromOption.extAnyOnFail = append(m.fromOption.extAnyOnFail, ext)
+		}
+	}
+}

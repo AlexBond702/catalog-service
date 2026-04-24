@@ -25,16 +25,16 @@ func NewHandler(svcService service.Category) rhandler.Category {
 func (h *handler) Create(w http.ResponseWriter, r *http.Request) {
 	var req entity.RequestCategoryCreate
 	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
-		httph.SendError(w, http.StatusBadRequest, entity.ErrIncorrectParameters)
+		httph.SendError(w, r, http.StatusBadRequest, entity.ErrIncorrectParameters)
 		return
 	}
 	category, err := h.svcService.Create(r.Context(), req)
 	if err != nil {
 		switch {
 		case errors.Is(err, entity.ErrAlreadyExists):
-			httph.SendError(w, http.StatusBadRequest, err)
+			httph.SendError(w, r, http.StatusBadRequest, err)
 		default:
-			httph.SendError(w, http.StatusInternalServerError, err)
+			httph.SendError(w, r, http.StatusInternalServerError, err)
 		}
 		return
 	}
@@ -51,16 +51,16 @@ func (h *handler) GetByGUID(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	guid, err := uuid.Parse(vars["guid"])
 	if err != nil {
-		httph.SendError(w, http.StatusBadRequest, entity.ErrIncorrectParameters)
+		httph.SendError(w, r, http.StatusBadRequest, entity.ErrIncorrectParameters)
 		return
 	}
 	category, err := h.svcService.GetByGUID(r.Context(), guid)
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			httph.SendError(w, http.StatusNotFound, err)
+			httph.SendError(w, r, http.StatusNotFound, err)
 			return
 		}
-		httph.SendError(w, http.StatusInternalServerError, err)
+		httph.SendError(w, r, http.StatusInternalServerError, err)
 		return
 	}
 
@@ -77,23 +77,23 @@ func (h *handler) Update(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	guid, err := uuid.Parse(vars["guid"])
 	if err != nil {
-		httph.SendError(w, http.StatusBadRequest, err)
+		httph.SendError(w, r, http.StatusBadRequest, err)
 	}
 	var req entity.RequestCategoryUpdate
 
 	if err := binding.ScanAndValidateJSON(r, &req); err != nil {
-		httph.SendError(w, http.StatusBadRequest, entity.ErrIncorrectParameters)
+		httph.SendError(w, r, http.StatusBadRequest, entity.ErrIncorrectParameters)
 		return
 	}
 	category, err := h.svcService.Update(r.Context(), guid, req)
 	if err != nil {
 		switch {
 		case errors.Is(err, entity.ErrNotFound):
-			httph.SendError(w, http.StatusNotFound, err)
+			httph.SendError(w, r, http.StatusNotFound, err)
 		case errors.Is(err, entity.ErrAlreadyExists):
-			httph.SendError(w, http.StatusBadRequest, err)
+			httph.SendError(w, r, http.StatusBadRequest, err)
 		default:
-			httph.SendError(w, http.StatusInternalServerError, err)
+			httph.SendError(w, r, http.StatusInternalServerError, err)
 		}
 		return
 	}
@@ -108,17 +108,17 @@ func (h *handler) Delete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	guid, err := uuid.Parse(vars["guid"])
 	if err != nil {
-		httph.SendError(w, http.StatusBadRequest, err)
+		httph.SendError(w, r, http.StatusBadRequest, err)
 	}
 
 	if err := h.svcService.Delete(r.Context(), guid); err != nil {
 		switch {
 		case errors.Is(err, entity.ErrNotFound):
-			httph.SendError(w, http.StatusNotFound, err)
+			httph.SendError(w, r, http.StatusNotFound, err)
 		case errors.Is(err, entity.ErrCategoryHasProducts):
-			httph.SendError(w, http.StatusBadRequest, err)
+			httph.SendError(w, r, http.StatusBadRequest, err)
 		default:
-			httph.SendError(w, http.StatusInternalServerError, err)
+			httph.SendError(w, r, http.StatusInternalServerError, err)
 		}
 		return
 	}
@@ -130,7 +130,7 @@ func (h *handler) List(w http.ResponseWriter, r *http.Request) {
 	categories, err := h.svcService.List(r.Context())
 	if err != nil {
 		if errors.Is(err, entity.ErrNotFound) {
-			httph.SendError(w, http.StatusNotFound, err)
+			httph.SendError(w, r, http.StatusNotFound, err)
 			return
 		}
 		httph.SendJSON(w, http.StatusInternalServerError, err)
