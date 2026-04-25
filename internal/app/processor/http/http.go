@@ -9,6 +9,9 @@ import (
 
 	"github.com/AlexBond702/catalog-service/internal/app/config/section"
 	rhandler "github.com/AlexBond702/catalog-service/internal/app/handler/http"
+	"github.com/AlexBond702/catalog-service/internal/app/util"
+	"github.com/AlexBond702/catalog-service/internal/pkg/http/httph"
+	"github.com/AlexBond702/catalog-service/internal/pkg/http/mzerolog"
 )
 
 type httpProc struct {
@@ -16,8 +19,38 @@ type httpProc struct {
 	addr   string
 }
 
+func extractUserID(r *http.Request) string {
+	return r.Header.Get("X-User-ID")
+}
+
+func extractRequestID(r *http.Request) string {
+	return r.Header.Get("X-Request-ID")
+}
+
+func extractContentLength(r *http.Request) any {
+	if r.ContentLength > 0 {
+		return r.ContentLength
+	}
+	return nil
+}
+
+func extractQuery(r *http.Request) any {
+	return r.URL.RawQuery
+}
+
 func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer, hCategory rhandler.Category, hProduct rhandler.Product) *httpProc {
 	r := mux.NewRouter()
+
+	logMW := mzerolog.NewMiddleware(
+		mzerolog.WithSkipper(util.IsFilteredHttpRoute),
+		mzerolog.WithStringExtractor("user_id", extractUserID),
+		mzerolog.WithStringExtractorOnFail("request_id", extractRequestID),
+		mzerolog.WithAnyExtractorOnFail("query", extractQuery),
+		mzerolog.WithAnyExtractorOnSuccess("content_length", extractContentLength),
+	)
+	r.Use(httph.NewErrorMiddleware(),
+		logMW)
+
 	r.NotFoundHandler = http.HandlerFunc(handlerNotFound)
 	vGenericRegHealthCheck(r, hHealth)
 	rV1 := r.PathPrefix("/v1").Subrouter()
