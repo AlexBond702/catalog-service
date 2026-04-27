@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-
 	"github.com/google/uuid"
 
 	"github.com/AlexBond702/catalog-service/internal/app/entity"

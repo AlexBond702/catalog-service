@@ -53,8 +53,7 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 	)
 	sqlDB := sql.OpenDB(sqlConnect)
 	sqlDB.SetMaxOpenConns(10)
-	bunDB := bun.NewDB(sqlDB, pgdialect.New(), bun.WithDiscardUnknownColumns())
-
+	var ruwBunDb = bun.NewDB(sqlDB, pgdialect.New(), bun.WithDiscardUnknownColumns())
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
@@ -62,11 +61,12 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 		return nil,
 			fmt.Errorf("failed connection ping: %w", err)
 	}
+	bunDb := newBunIdbTxInjector(ruwBunDb)
 	c := Client{
-		rawBunDB: bunDB,
+		_bunDB:   bunDb,
+		rawBunDB: ruwBunDb,
 		cfg:      cfg,
 	}
-	c._bunDB = bunDB
 	return &c, nil
 }
 
@@ -117,4 +117,33 @@ func (c *Client) Migrate(ctx context.Context) (oldVer, newVer int64, err error) 
 		newVer = verseNew
 	}
 	return oldVer, newVer, nil
+}
+func (c *Client) InsideTx(ctx context.Context, cb func(ctx context.Context) error) error {
+	tx := getTxFromContext(ctx)
+	if tx.Tx != nil {
+		return cb(ctx)
+	}
+	var done = false
+	var err error
+	tx, err = c.rawBunDB.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin transaction: %w", err)
+	}
+	defer func() {
+		if !done {
+			_ = tx.Rollback()
+		}
+	}()
+	newCtx := setTxFromContext(ctx, tx)
+	ctx = newCtx
+	err = cb(ctx)
+	if err != nil {
+		return err
+	}
+	done = true
+	err = tx.Commit()
+	if err != nil {
+		return fmt.Errorf("failed to commit transaction: %w", err)
+	}
+	return nil
 }
