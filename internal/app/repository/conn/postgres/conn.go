@@ -53,7 +53,7 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 	)
 	sqlDB := sql.OpenDB(sqlConnect)
 	sqlDB.SetMaxOpenConns(10)
-	var ruwBunDb = bun.NewDB(sqlDB, pgdialect.New(), bun.WithDiscardUnknownColumns())
+	ruwBunDb := bun.NewDB(sqlDB, pgdialect.New(), bun.WithDiscardUnknownColumns())
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
@@ -118,12 +118,13 @@ func (c *Client) Migrate(ctx context.Context) (oldVer, newVer int64, err error) 
 	}
 	return oldVer, newVer, nil
 }
+
 func (c *Client) InsideTx(ctx context.Context, cb func(ctx context.Context) error) error {
 	tx := getTxFromContext(ctx)
 	if tx.Tx != nil {
 		return cb(ctx)
 	}
-	var done = false
+	done := false
 	var err error
 	tx, err = c.rawBunDB.BeginTx(ctx, nil)
 	if err != nil {
