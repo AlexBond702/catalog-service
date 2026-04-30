@@ -1,6 +1,13 @@
 package binding
 
-import "net/http"
+import (
+	"errors"
+	"net/http"
+
+	"github.com/go-playground/validator/v10"
+
+	"github.com/AlexBond702/catalog-service/internal/pkg/http/httph"
+)
 
 func ScanAndValidateJSON(r *http.Request, to any) error {
 	return scanAndValidate(r, to, bJSON)
@@ -11,8 +18,14 @@ func ScanAndValidateQuery(r *http.Request, to any) error {
 }
 
 func scanAndValidate(r *http.Request, to any, b Binding) error {
-	if err := b.Bind(r, to); err != nil {
-		return err
+	err := b.Bind(r, to)
+	if err == nil {
+		return nil
 	}
-	return nil
+	var validationErr validator.ValidationErrors
+	if errors.As(err, &validationErr) {
+		return &validationFailedError{validationErr}
+	}
+	httph.ErrorApplyDetail(r, "Malformed HTTP request "+b.Name()+" source")
+	return ErrMalformedSource
 }

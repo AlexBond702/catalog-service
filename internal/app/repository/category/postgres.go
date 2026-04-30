@@ -41,13 +41,14 @@ func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Category
 }
 
 func (r *repoPg) Update(ctx context.Context, category entity.Category) error {
-	result, err := r._DB.NewUpdate().Model(&category).WherePK().ExcludeColumn("id", "created_at").Exec(ctx)
-	return rcpostgres.UpdateErr(result, err)
+	err := r._DB.NewUpdate().Model(&category).WherePK().ExcludeColumn("id", "created_at").Returning("*").Scan(ctx)
+	return err
 }
 
 func (r *repoPg) Delete(ctx context.Context, guid uuid.UUID) error {
-	_, err := r._DB.NewDelete().Model((*entity.Category)(nil)).Where("guid = ?", guid).Exec(ctx)
-	return rcpostgres.DeleteErr(err)
+	var deleted entity.Category
+	_, err := r._DB.NewDelete().Model((*entity.Category)(nil)).Where("guid = ?", guid).Exec(ctx, &deleted)
+	return err
 }
 
 func (r *repoPg) List(ctx context.Context, name *string) ([]entity.Category, error) {
