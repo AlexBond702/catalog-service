@@ -53,7 +53,7 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 	)
 	sqlDB := sql.OpenDB(sqlConnect)
 	sqlDB.SetMaxOpenConns(10)
-	ruwBunDb := bun.NewDB(sqlDB, pgdialect.New(), bun.WithDiscardUnknownColumns())
+	rawBunDb := bun.NewDB(sqlDB, pgdialect.New(), bun.WithDiscardUnknownColumns())
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
@@ -61,10 +61,10 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 		return nil,
 			fmt.Errorf("failed connection ping: %w", err)
 	}
-	bunDb := newBunIdbTxInjector(ruwBunDb)
+	bunDb := newBunIdbTxInjector(rawBunDb)
 	c := Client{
 		_bunDB:   bunDb,
-		rawBunDB: ruwBunDb,
+		rawBunDB: rawBunDb,
 		cfg:      cfg,
 	}
 	return &c, nil
