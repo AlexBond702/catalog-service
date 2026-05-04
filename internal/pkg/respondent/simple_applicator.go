@@ -16,7 +16,7 @@ func (sa *SimpleApplicator) Apply(ctx any, manifest *Manifest) {
 		ErrorDetail  string   `json:"error_detail,omitempty"`
 		ErrorDetails []string `json:"error_details,omitempty"`
 	}
-	httpCtx, ok := ctx.(HttpContext)
+	httpCtx, ok := ctx.(*HttpContext)
 	if !ok {
 		return
 	}
@@ -24,7 +24,7 @@ func (sa *SimpleApplicator) Apply(ctx any, manifest *Manifest) {
 	r := httpCtx.R
 
 	jsonManifest := (*ManifestJSON)(manifest)
-	httph.SendEncoded(w, r, jsonManifest.Status, manifest)
+	httph.SendEncoded(w, r, jsonManifest.Status, jsonManifest)
 }
 
 func NewSimpleApplicator() *SimpleApplicator {

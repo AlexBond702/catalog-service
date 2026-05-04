@@ -42,6 +42,7 @@ func (se *SimpleExpander) ExtractorFor(sentinelErr error, extractor ManifestExtr
 
 func (se *SimpleExpander) FallbackExtractor(extractor ManifestExtractor) *SimpleExpander {
 	return &SimpleExpander{
+		rules:    se.rules,
 		fallback: extractor,
 	}
 }

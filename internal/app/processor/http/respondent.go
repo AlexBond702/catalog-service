@@ -23,14 +23,14 @@ func makeErrorMiddleware() httph.Middleware {
 		_50001D = "Try again later"
 	)
 	makeFallbackManifest := func(status, errorCode int, message, detail string) respondent.ManifestExtractor {
-		genericManifest := respondent.Manifest{
+		genericManifest := &respondent.Manifest{
 			Status:      status,
 			ErrorCode:   errorCode,
 			Error:       message,
 			ErrorDetail: detail,
 		}
 		return func(_ error) *respondent.Manifest {
-			return &genericManifest
+			return genericManifest
 		}
 	}
 	replacer := respondent.NewSimpleReplacer().ReplaceBy(sql.ErrNoRows, entity.ErrNotFound)

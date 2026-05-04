@@ -21,10 +21,11 @@ type HttpContext struct {
 var ErrBadExpander = errors.New("respondent: expander is required")
 
 func (rs *respondent) Callback(ctx any, err error) {
-	if errRep := rs.replacer.Replace(err); errRep == nil {
+	errRep := rs.replacer.Replace(err)
+	if errRep == nil {
 		return
 	}
-	manifest := rs.expander.Expand(err)
+	manifest := rs.expander.Expand(errRep)
 	if manifest == nil {
 		return
 	}
@@ -44,10 +45,10 @@ func newRespondent(expander Expander, replacer Replacer, applicator Applicator) 
 		panic(ErrBadExpander)
 	}
 	if replacer == nil {
-		NewSimpleReplacer()
+		replacer = NewSimpleReplacer()
 	}
 	if applicator == nil {
-		NewSimpleApplicator()
+		applicator = NewSimpleApplicator()
 	}
 
 	resp := &respondent{
