@@ -40,6 +40,7 @@ func extractQuery(r *http.Request) any {
 
 func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer, hCategory rhandler.Category, hProduct rhandler.Product) *httpProc {
 	r := mux.NewRouter()
+	r.StrictSlash(true)
 
 	logMW := mzerolog.NewMiddleware(
 		mzerolog.WithSkipper(util.IsFilteredHttpRoute),
@@ -48,8 +49,11 @@ func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer, hCategory 
 		mzerolog.WithAnyExtractorOnFail("query", extractQuery),
 		mzerolog.WithAnyExtractorOnSuccess("content_length", extractContentLength),
 	)
-	r.Use(httph.NewErrorMiddleware(),
-		logMW)
+	r.Use(
+		httph.NewErrorMiddleware(),
+		logMW,
+		makeErrorMiddleware(),
+	)
 
 	r.NotFoundHandler = http.HandlerFunc(handlerNotFound)
 	vGenericRegHealthCheck(r, hHealth)

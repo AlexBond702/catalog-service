@@ -38,7 +38,7 @@ func (e *validationFailedError) Is(other error) bool {
 
 func NewRespondentManifestExtractor(status, errorCode int, message string) respondent.ManifestExtractor {
 	return func(err error) *respondent.Manifest {
-		manifest := respondent.Manifest{
+		manifest := &respondent.Manifest{
 			Status:    status,
 			ErrorCode: errorCode,
 			Error:     message,
@@ -65,7 +65,7 @@ func NewRespondentManifestExtractor(status, errorCode int, message string) respo
 				manifest.ErrorDetails = append(manifest.ErrorDetails, errList[i].Error())
 			}
 		}
-		return &manifest
+		return manifest
 	}
 }
 
