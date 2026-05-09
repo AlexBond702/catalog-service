@@ -86,3 +86,15 @@ ci: ## Запустить все CI проверки
 	go run github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v${GO_LINT_VERSION} run --timeout=10m
 	@echo ""
 	@echo "CI passed!"
+# =====================================================
+#                        Генерация моков
+# =====================================================
+.PHONY: mock-generate
+mock-generate:
+	@chmod +x scripts/generate-mocks.sh
+	@export PATH=$$PATH:$$HOME/go/bin && ./scripts/generate-mocks.sh
+# ===============================================================
+.PHONY: test-coverage-product-service
+test-coverage-product-service:
+	go test --tags=tests -coverprofile=coverage.out -coverpkg=./internal/app/service/product ./internal/app/service/product
+	go tool cover -html=coverage.out -o coverage.html

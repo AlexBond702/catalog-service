@@ -93,14 +93,14 @@ func (s *svc) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProd
 }
 
 func (s *svc) Delete(ctx context.Context, guid uuid.UUID) error {
-	_, err := s.repoProduct.GetByGUID(ctx, guid)
+	product, err := s.repoProduct.GetByGUID(ctx, guid)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return entity.ErrNotFound
 		}
 		return err
 	}
-	if err := s.repoProduct.Delete(ctx, guid); err != nil {
+	if err := s.repoProduct.Delete(ctx, product.GUID); err != nil {
 		return err
 	}
 	return nil
