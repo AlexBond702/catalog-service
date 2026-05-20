@@ -19,7 +19,7 @@ type (
 	_DB = rcpostgres.Client
 )
 
-func NewRepoFromPostgres(client *rcpostgres.Client) repository.Product {
+func NewRepoFromPostgres(ctx context.Context, client *rcpostgres.Client) repository.Product {
 	return &repoPg{_DB: client}
 }
 
