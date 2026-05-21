@@ -8,6 +8,10 @@ import (
 	"github.com/AlexBond702/catalog-service/internal/app/entity"
 )
 
+type Migrate interface {
+	Migrate(ctx context.Context) (oldVer, newVer int64, err error)
+}
+
 type Transactional interface {
 	InsideTx(ctx context.Context, cb func(ctx context.Context) error) error
 }
