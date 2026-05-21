@@ -54,10 +54,10 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 	sqlDB := sql.OpenDB(sqlConnect)
 	sqlDB.SetMaxOpenConns(10)
 	rawBunDb := bun.NewDB(sqlDB, pgdialect.New(), bun.WithDiscardUnknownColumns())
-	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
+	newCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
-	if err := sqlDB.PingContext(ctx); err != nil {
+	if err := sqlDB.PingContext(newCtx); err != nil {
 		return nil,
 			fmt.Errorf("failed connection ping: %w", err)
 	}
