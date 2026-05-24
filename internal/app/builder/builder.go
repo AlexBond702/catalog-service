@@ -3,47 +3,71 @@ package builder
 import (
 	"context"
 	"fmt"
+	"os"
+	"os/signal"
 	"reflect"
 	"sync"
+	"syscall"
 
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
 
 	"github.com/AlexBond702/catalog-service/internal/app/config"
 	rhandler "github.com/AlexBond702/catalog-service/internal/app/handler/http"
+	hcategory "github.com/AlexBond702/catalog-service/internal/app/handler/http/category"
 	hhealth "github.com/AlexBond702/catalog-service/internal/app/handler/http/health"
+	hproduct "github.com/AlexBond702/catalog-service/internal/app/handler/http/product"
 	"github.com/AlexBond702/catalog-service/internal/app/processor"
+	rprocessor "github.com/AlexBond702/catalog-service/internal/app/processor/http"
 	pprocessor "github.com/AlexBond702/catalog-service/internal/app/processor/other"
 	"github.com/AlexBond702/catalog-service/internal/app/repository"
 	pcategory "github.com/AlexBond702/catalog-service/internal/app/repository/category"
 	rcpostgres "github.com/AlexBond702/catalog-service/internal/app/repository/conn/postgres"
 	pproduct "github.com/AlexBond702/catalog-service/internal/app/repository/product"
+	"github.com/AlexBond702/catalog-service/internal/app/service"
+	scategory "github.com/AlexBond702/catalog-service/internal/app/service/category"
+	sproduct "github.com/AlexBond702/catalog-service/internal/app/service/product"
 )
 
 type Builder struct {
-	cCtx *cli.Context
-	ctx  context.Context
-	wg   sync.WaitGroup
-	err  error
-	cfg  config.Config
+	cCtx    *cli.Context
+	ctx     context.Context
+	wg      sync.WaitGroup
+	err     error
+	cfg     config.Config
+	chError chan error
 
 	connPostgres *rcpostgres.Client
 
 	categoryRepo repository.Category
 	productRepo  repository.Product
 
-	healthHandler rhandler.Health
-	// categoryHandler rhandler.Category
-	// productHandler  rhandler.Product
+	categoryService service.Category
+	productService  service.Product
+
+	healthHandler   rhandler.Health
+	categoryHandler rhandler.Category
+	productHandler  rhandler.Product
 
 	processors []processor.Processor
 }
 
 func NewBuilder(cCtx *cli.Context) *Builder {
 	b := Builder{
-		cCtx: cCtx,
-		ctx:  context.Background(),
+		cCtx:    cCtx,
+		ctx:     context.Background(),
+		chError: make(chan error, 4096),
 	}
+
+	ctxCancel, cancelFunc := context.WithCancel(context.Background())
+	b.ctx = ctxCancel
+
+	chanSignal := make(chan os.Signal, 1)
+	signal.Notify(chanSignal, syscall.SIGINT, syscall.SIGTERM, syscall.SIGHUP)
+
+	go b.waitForSignal(chanSignal, cancelFunc)
+	go b.printErrors()
+
 	b.healthHandler = hhealth.NewHandler()
 	return &b
 }
@@ -107,6 +131,41 @@ func (b *Builder) BuildRepoProduct() {
 	}, b.connPostgres)
 }
 
+func (b *Builder) BuildServiceCategory() {
+	b.exec(true, func(b *Builder) {
+		serviceCat := scategory.NewService(b.categoryRepo, b.productRepo)
+		b.categoryService = serviceCat
+	}, b.categoryRepo)
+}
+
+func (b *Builder) BuildServiceProduct() {
+	b.exec(true, func(b *Builder) {
+		serviceProd := sproduct.NewService(b.productRepo, b.categoryRepo)
+		b.productService = serviceProd
+	}, b.productRepo)
+}
+
+func (b *Builder) BuildHandlerHttpCategory() {
+	b.exec(true, func(b *Builder) {
+		categoryHandler := hcategory.NewHandler(b.categoryService)
+		b.categoryHandler = categoryHandler
+	}, b.categoryService)
+}
+
+func (b *Builder) BuildHandlerHttpProduct() {
+	b.exec(true, func(b *Builder) {
+		productHandler := hproduct.NewHandler(b.productService)
+		b.productHandler = productHandler
+	}, b.productService)
+}
+
+func (b *Builder) BuildProcHttp() {
+	b.exec(true, func(b *Builder) {
+		procHttp := rprocessor.NewHttp(b.healthHandler, b.categoryHandler, b.productHandler, nil, b.cfg.Processor.WebServer)
+		b.processors = append(b.processors, procHttp)
+	}, b.productHandler, b.categoryHandler)
+}
+
 func (b *Builder) buildConfig(args config.LoadArgs, injectors []func(*config.Config)) {
 	args.Output = b.cCtx.App.Writer
 	args.EnableSimpleLog = b.cCtx.Bool("no json")
@@ -139,4 +198,16 @@ func (b *Builder) exec(preCond bool, cb func(b *Builder), requiredArgs ...any) {
 		return
 	}
 	cb(b)
+}
+
+func (b *Builder) waitForSignal(sig chan os.Signal, cancelFunc func()) {
+	sigValue := <-sig
+	log.Printf("Signal arrive: %T", sigValue)
+	cancelFunc()
+}
+
+func (b *Builder) printErrors() {
+	for chErr := range b.chError {
+		log.Error().Err(chErr)
+	}
 }

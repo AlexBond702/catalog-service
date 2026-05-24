@@ -1,20 +1,26 @@
 package rprocessor
 
 import (
+	"context"
 	"fmt"
+	"net"
 	"net/http"
+	"sync"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 
 	"github.com/AlexBond702/catalog-service/internal/app/config/section"
 	rhandler "github.com/AlexBond702/catalog-service/internal/app/handler/http"
+	"github.com/AlexBond702/catalog-service/internal/app/processor"
 	"github.com/AlexBond702/catalog-service/internal/app/util"
 	"github.com/AlexBond702/catalog-service/internal/pkg/http/httph"
 	"github.com/AlexBond702/catalog-service/internal/pkg/http/mzerolog"
 )
 
 type httpProc struct {
+	processor.Processor
 	server http.Server
 	addr   string
 }
@@ -38,7 +44,12 @@ func extractQuery(r *http.Request) any {
 	return r.URL.RawQuery
 }
 
-func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer, hCategory rhandler.Category, hProduct rhandler.Product) *httpProc {
+func NewHttp(hHealth rhandler.Health,
+	hCategory rhandler.Category,
+	hProduct rhandler.Product,
+	_ []httph.Middleware,
+	cfg section.ProcessorWebServer,
+) processor.Processor {
 	r := mux.NewRouter()
 	r.StrictSlash(true)
 
@@ -90,7 +101,27 @@ func NewHttp(hHealth rhandler.Health, cfg section.ProcessorWebServer, hCategory 
 	return &p
 }
 
-func (p *httpProc) Serve() error {
+func (p *httpProc) StartAsync(ctx context.Context, wg *sync.WaitGroup) {
+	var lc net.ListenConfig
+	l, err := lc.Listen(ctx, "tcp", p.addr)
+	if err != nil {
+		log.Fatal().Err(err).Str("listen_addr", p.addr).
+			Msg("Failed to start listening TCP addr for HTTP server")
+		return
+	}
+	log.Info().Str("listen_addr", p.addr).
+		Msg("Listening of TCP addr for HTTP server has been started")
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		p.serve(l)
+	}()
+	go processor.WatchForShutdown(ctx, wg, util.CloserFunc(l.Close))
+	go processor.WatchForShutdown(ctx, wg, util.NewCloserContextFunc(p.server.Shutdown, context.Background(), time.Second*5))
+	wg.Wait()
+}
+
+func (p *httpProc) serve(l net.Listener) {
 	log.Info().Str("addr", p.addr).Msg("Starting HTTP server")
-	return p.server.ListenAndServe()
+	_ = p.server.Serve(l) // блокирует горутину
 }
