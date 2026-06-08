@@ -32,13 +32,22 @@ func cmdWebServer(cCtx *cli.Context) error {
 	app := builder.NewBuilder(cCtx)
 	app.BuildConfig()
 	app.BuildRepoConnPostgres()
+
 	app.BuildRepoCategory()
 	app.BuildRepoProduct()
+
 	app.BuildServiceCategory()
 	app.BuildServiceProduct()
+
 	app.BuildHandlerHttpCategory()
 	app.BuildHandlerHttpProduct()
-	app.BuildProcHttp()
+
+	app.BuildHandlerGrpcCatalog()
+
+	app.BuildProcGrpcGateway() // GATEWAY :8081
+	app.BuildProcGrpc()        // GRPC API :50051
+	app.BuildProcHttp()        // REST API :8080
+
 	app.Run()
 	return nil
 }

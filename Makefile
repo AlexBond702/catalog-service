@@ -98,3 +98,11 @@ mock-generate:
 test-coverage-product-service:
 	go test --tags=tests -coverprofile=coverage.out -coverpkg=./internal/app/service/product ./internal/app/service/product
 	go tool cover -html=coverage.out -o coverage.html
+
+.PHONY: migrate-up
+migrate-up:
+	@migrate -database $(MIGRATION_DSN) -path $(CUR_MIGRATION_DIR) up
+
+.PHONY: migrate-down
+migrate-down:
+	@migrate -database $(MIGRATION_DSN) -path $(CUR_MIGRATION_DIR) down -all

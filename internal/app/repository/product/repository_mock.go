@@ -175,6 +175,63 @@ func (_c *MockProduct_GetByGUID_Call) RunAndReturn(run func(context.Context, uui
 	return _c
 }
 
+// GetById provides a mock function with given fields: ctx, id
+func (_m *MockProduct) GetById(ctx context.Context, id int64) (entity.Product, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetById")
+	}
+
+	var r0 entity.Product
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (entity.Product, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64) entity.Product); ok {
+		r0 = rf(ctx, id)
+	} else {
+		r0 = ret.Get(0).(entity.Product)
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// MockProduct_GetById_Call is a *mock.Call that shadows Run/Return methods with type explicit version for method 'GetById'
+type MockProduct_GetById_Call struct {
+	*mock.Call
+}
+
+// GetById is a helper method to define mock.On call
+//   - ctx context.Context
+//   - id int64
+func (_e *MockProduct_Expecter) GetById(ctx interface{}, id interface{}) *MockProduct_GetById_Call {
+	return &MockProduct_GetById_Call{Call: _e.mock.On("GetById", ctx, id)}
+}
+
+func (_c *MockProduct_GetById_Call) Run(run func(ctx context.Context, id int64)) *MockProduct_GetById_Call {
+	_c.Call.Run(func(args mock.Arguments) {
+		run(args[0].(context.Context), args[1].(int64))
+	})
+	return _c
+}
+
+func (_c *MockProduct_GetById_Call) Return(_a0 entity.Product, _a1 error) *MockProduct_GetById_Call {
+	_c.Call.Return(_a0, _a1)
+	return _c
+}
+
+func (_c *MockProduct_GetById_Call) RunAndReturn(run func(context.Context, int64) (entity.Product, error)) *MockProduct_GetById_Call {
+	_c.Call.Return(run)
+	return _c
+}
+
 // InsideTx provides a mock function with given fields: ctx, cb
 func (_m *MockProduct) InsideTx(ctx context.Context, cb func(context.Context) error) error {
 	ret := _m.Called(ctx, cb)
