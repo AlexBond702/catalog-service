@@ -13,11 +13,14 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/AlexBond702/catalog-service/internal/app/config"
+	"github.com/AlexBond702/catalog-service/internal/app/handler/grpc/catalog"
 	rhandler "github.com/AlexBond702/catalog-service/internal/app/handler/http"
 	hcategory "github.com/AlexBond702/catalog-service/internal/app/handler/http/category"
 	hhealth "github.com/AlexBond702/catalog-service/internal/app/handler/http/health"
 	hproduct "github.com/AlexBond702/catalog-service/internal/app/handler/http/product"
 	"github.com/AlexBond702/catalog-service/internal/app/processor"
+	"github.com/AlexBond702/catalog-service/internal/app/processor/gateway"
+	"github.com/AlexBond702/catalog-service/internal/app/processor/grpc"
 	rprocessor "github.com/AlexBond702/catalog-service/internal/app/processor/http"
 	pprocessor "github.com/AlexBond702/catalog-service/internal/app/processor/other"
 	"github.com/AlexBond702/catalog-service/internal/app/repository"
@@ -48,6 +51,8 @@ type Builder struct {
 	healthHandler   rhandler.Health
 	categoryHandler rhandler.Category
 	productHandler  rhandler.Product
+
+	grpcCatalogHandler *catalog.Handler
 
 	processors []processor.Processor
 }
@@ -159,11 +164,31 @@ func (b *Builder) BuildHandlerHttpProduct() {
 	}, b.productService)
 }
 
+func (b *Builder) BuildHandlerGrpcCatalog() {
+	b.exec(true, func(b *Builder) {
+		b.grpcCatalogHandler = catalog.NewHandler(b.productService)
+	}, b.productService)
+}
+
 func (b *Builder) BuildProcHttp() {
 	b.exec(true, func(b *Builder) {
 		procHttp := rprocessor.NewHttp(b.healthHandler, b.categoryHandler, b.productHandler, nil, b.cfg.Processor.WebServer)
 		b.processors = append(b.processors, procHttp)
 	}, b.productHandler, b.categoryHandler)
+}
+
+func (b *Builder) BuildProcGrpc() {
+	b.exec(true, func(b *Builder) {
+		procGrpc := grpc.NewGrpcProc(*b.grpcCatalogHandler, b.cfg.Processor.Grpc)
+		b.processors = append(b.processors, procGrpc)
+	}, b.grpcCatalogHandler)
+}
+
+func (b *Builder) BuildProcGrpcGateway() {
+	b.exec(true, func(b *Builder) {
+		grpcGateway := gateway.NewGateway(b.cfg.Processor.Gateway)
+		b.processors = append(b.processors, grpcGateway)
+	})
 }
 
 func (b *Builder) buildConfig(args config.LoadArgs, injectors []func(*config.Config)) {

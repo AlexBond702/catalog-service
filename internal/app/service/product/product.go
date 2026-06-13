@@ -64,6 +64,16 @@ func (s *svc) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Product, er
 	return gettingProd, nil
 }
 
+func (s *svc) GetById(ctx context.Context, id int64) (entity.Product, error) {
+	getting, err := s.repoProduct.GetById(ctx, id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return entity.Product{}, entity.ErrNotFound
+		}
+	}
+	return getting, nil
+}
+
 func (s *svc) Update(ctx context.Context, guid uuid.UUID, req entity.RequestProductUpdate) (entity.Product, error) {
 	oldProduct, err := s.repoProduct.GetByGUID(ctx, guid)
 	if err != nil {

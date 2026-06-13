@@ -118,7 +118,6 @@ func (p *httpProc) StartAsync(ctx context.Context, wg *sync.WaitGroup) {
 	}()
 	go processor.WatchForShutdown(ctx, wg, util.CloserFunc(l.Close))
 	go processor.WatchForShutdown(ctx, wg, util.NewCloserContextFunc(p.server.Shutdown, context.Background(), time.Second*5))
-	wg.Wait()
 }
 
 func (p *httpProc) serve(l net.Listener) {

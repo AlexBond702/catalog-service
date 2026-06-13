@@ -40,6 +40,14 @@ func (r *repoPg) GetByGUID(ctx context.Context, guid uuid.UUID) (entity.Product,
 	return prod, nil
 }
 
+func (r *repoPg) GetById(ctx context.Context, id int64) (entity.Product, error) {
+	var product entity.Product
+	if err := r._DB.NewSelect().Model(&product).Where("id=?", id).Scan(ctx); err != nil {
+		return entity.Product{}, util.ReplaceErr1(err, sql.ErrNoRows, entity.ErrNotFound)
+	}
+	return product, nil
+}
+
 func (r *repoPg) Update(ctx context.Context, product entity.Product) error {
 	err := r._DB.NewUpdate().Model(&product).WherePK().ExcludeColumn("id", "created_at").Returning("*").Scan(ctx)
 	return err
