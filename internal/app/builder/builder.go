@@ -22,6 +22,7 @@ import (
 	"github.com/AlexBond702/catalog-service/internal/app/processor/gateway"
 	"github.com/AlexBond702/catalog-service/internal/app/processor/grpc"
 	rprocessor "github.com/AlexBond702/catalog-service/internal/app/processor/http"
+	"github.com/AlexBond702/catalog-service/internal/app/processor/monitor"
 	pprocessor "github.com/AlexBond702/catalog-service/internal/app/processor/other"
 	"github.com/AlexBond702/catalog-service/internal/app/repository"
 	pcategory "github.com/AlexBond702/catalog-service/internal/app/repository/category"
@@ -188,6 +189,16 @@ func (b *Builder) BuildProcGrpcGateway() {
 	b.exec(true, func(b *Builder) {
 		grpcGateway := gateway.NewGateway(b.cfg.Processor.Gateway)
 		b.processors = append(b.processors, grpcGateway)
+	})
+}
+
+func (b *Builder) BuildMonitorPrometheus() {
+	b.exec(true, func(b *Builder) {
+		if !b.cfg.Monitor.Prometheus.Enabled {
+			log.Warn().Msg("false prometheus enabled")
+		}
+		prometheus := monitor.NewPrometheusObserver()
+		b.processors = append(b.processors, prometheus)
 	})
 }
 
