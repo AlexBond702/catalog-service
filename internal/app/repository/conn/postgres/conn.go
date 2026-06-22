@@ -37,7 +37,7 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 	var u url.URL
 	u.Scheme = "postgres"
 	u.Host = cfg.Address
-	u.Path = cfg.Name
+	u.Path = cfg.Db
 	u.User = url.UserPassword(cfg.Username, cfg.Password)
 	args := make(url.Values)
 	args.Set("sslmode", "disable")
