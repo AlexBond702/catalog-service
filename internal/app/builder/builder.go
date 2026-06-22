@@ -11,7 +11,6 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
-	"google.golang.org/grpc"
 
 	"github.com/AlexBond702/catalog-service/internal/app/config"
 	"github.com/AlexBond702/catalog-service/internal/app/handler/grpc/catalog"
@@ -53,9 +52,6 @@ type Builder struct {
 	healthHandler   rhandler.Health
 	categoryHandler rhandler.Category
 	productHandler  rhandler.Product
-
-	unaryInterceptors  []grpc.UnaryServerInterceptor
-	streamInterceptors []grpc.StreamServerInterceptor
 
 	grpcCatalogHandler *catalog.Handler
 
@@ -184,7 +180,7 @@ func (b *Builder) BuildProcHttp() {
 
 func (b *Builder) BuildProcGrpc() {
 	b.exec(true, func(b *Builder) {
-		procGrpc := pgrpc.NewGrpc(*b.grpcCatalogHandler, b.unaryInterceptors, b.streamInterceptors, b.cfg.Processor.Grpc)
+		procGrpc := pgrpc.NewGrpc(*b.grpcCatalogHandler, b.cfg.Processor.Grpc)
 		b.processors = append(b.processors, procGrpc)
 	}, b.grpcCatalogHandler)
 }
