@@ -4,6 +4,7 @@ import (
 	"context"
 
 	"github.com/google/uuid"
+	"github.com/prometheus/client_golang/prometheus/promauto"
 
 	"github.com/AlexBond702/catalog-service/internal/app/entity"
 )
@@ -23,5 +24,8 @@ type (
 		Update(ctx context.Context, guid uuid.UUID, req entity.RequestProductUpdate) (entity.Product, error)
 		Delete(ctx context.Context, guid uuid.UUID) error
 		List(ctx context.Context) ([]entity.Product, error)
+	}
+	Metered interface {
+		ProvideMetrics(fact promauto.Factory) []entity.MetricObservation
 	}
 )

@@ -44,6 +44,8 @@ func cmdWebServer(cCtx *cli.Context) error {
 
 	app.BuildHandlerGrpcCatalog()
 
+	app.BuildMonitorPrometheus() // Monitor
+
 	app.BuildProcGrpcGateway() // GATEWAY :8081
 	app.BuildProcGrpc()        // GRPC API :50051
 	app.BuildProcHttp()        // REST API :8080

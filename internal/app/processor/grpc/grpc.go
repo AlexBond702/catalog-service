@@ -21,7 +21,7 @@ type grpcProc struct {
 	addr   string
 }
 
-func NewGrpcProc(handler catalog.Handler, cfg section.ProcessorGrpc) processor.Processor {
+func NewGrpc(handler catalog.Handler, cfg section.ProcessorGrpc) processor.Processor {
 	server := grpc.NewServer()
 	pb.RegisterCatalogServiceServer(server, &handler)
 
