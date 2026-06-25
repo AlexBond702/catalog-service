@@ -15,7 +15,7 @@ import (
 	"github.com/AlexBond702/catalog-service/internal/app/processor"
 	"github.com/AlexBond702/catalog-service/internal/app/util"
 	"github.com/AlexBond702/catalog-service/internal/pkg/grpc/grpch"
-	"github.com/AlexBond702/catalog-service/internal/pkg/grpc/mcomon"
+	"github.com/AlexBond702/catalog-service/internal/pkg/grpc/mcommon"
 	"github.com/AlexBond702/catalog-service/internal/pkg/grpc/mprom"
 	"github.com/AlexBond702/catalog-service/internal/pkg/grpc/mzerolog"
 )
@@ -31,7 +31,7 @@ func NewGrpc(handler catalog.Handler,
 	cfg section.ProcessorGrpc,
 ) processor.Processor {
 	coreMiddlewares := []grpch.Middleware{
-		mcomon.NewRecoveryMiddleware(),
+		mcommon.NewRecovery(),
 		mzerolog.NewMiddleware(),
 		mprom.New(),
 	}

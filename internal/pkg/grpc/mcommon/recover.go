@@ -1,4 +1,4 @@
-package mcomon
+package mcommon
 
 import (
 	"context"
@@ -13,7 +13,7 @@ import (
 
 type recoveryMiddleware struct{}
 
-func NewRecoveryMiddleware() grpch.Middleware {
+func NewRecovery() grpch.Middleware {
 	return new(recoveryMiddleware)
 }
 
@@ -45,7 +45,7 @@ func (r *recoveryMiddleware) ForStream() grpc.StreamServerInterceptor {
 	) (err error) {
 		panicked := true
 		defer func() {
-			if rec := recover(); rec != nil {
+			if rec := recover(); rec != nil || panicked {
 				err = status.Errorf(codes.Internal, "%s", fmt.Sprintf("recovery panic: %v - %t", rec, panicked))
 			}
 		}()

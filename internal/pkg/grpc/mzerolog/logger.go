@@ -66,7 +66,7 @@ func (m *middleware) ForStream() grpc.StreamServerInterceptor {
 	) (err error) {
 		ctx := ss.Context()
 		start := time.Now()
-		err = handler(ctx, ss)
+		err = handler(srv, ss)
 		var logErr error
 		if err != nil {
 			logErr = err
