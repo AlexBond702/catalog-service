@@ -14,6 +14,10 @@ import (
 	"github.com/AlexBond702/catalog-service/internal/app/handler/grpc/catalog"
 	"github.com/AlexBond702/catalog-service/internal/app/processor"
 	"github.com/AlexBond702/catalog-service/internal/app/util"
+	"github.com/AlexBond702/catalog-service/internal/pkg/grpc/grpch"
+	"github.com/AlexBond702/catalog-service/internal/pkg/grpc/mcommon"
+	"github.com/AlexBond702/catalog-service/internal/pkg/grpc/mprom"
+	"github.com/AlexBond702/catalog-service/internal/pkg/grpc/mzerolog"
 )
 
 type grpcProc struct {
@@ -21,8 +25,34 @@ type grpcProc struct {
 	addr   string
 }
 
-func NewGrpc(handler catalog.Handler, cfg section.ProcessorGrpc) processor.Processor {
-	server := grpc.NewServer()
+func NewGrpc(handler catalog.Handler,
+	unaryInterceptors []grpc.UnaryServerInterceptor,
+	streamInterceptors []grpc.StreamServerInterceptor,
+	cfg section.ProcessorGrpc,
+) processor.Processor {
+	coreMiddlewares := []grpch.Middleware{
+		mcommon.NewRecovery(),
+		mzerolog.NewMiddleware(),
+		mprom.New(),
+	}
+
+	coreUnary := make([]grpc.UnaryServerInterceptor, 0)
+	coreStream := make([]grpc.StreamServerInterceptor, 0)
+
+	for _, m := range coreMiddlewares {
+		coreUnary = append(coreUnary, m.ForUnary())
+		coreStream = append(coreStream, m.ForStream())
+	}
+
+	unaryInterceptors = append(coreUnary, unaryInterceptors...)
+	streamInterceptors = append(coreStream, streamInterceptors...)
+
+	mprom.EnableHistogram()
+
+	server := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(unaryInterceptors...),
+		grpc.ChainStreamInterceptor(streamInterceptors...),
+	)
 	pb.RegisterCatalogServiceServer(server, &handler)
 
 	return &grpcProc{
