@@ -23,7 +23,7 @@ import (
 	"github.com/AlexBond702/catalog-service/internal/app/processor/gateway"
 	pgrpc "github.com/AlexBond702/catalog-service/internal/app/processor/grpc"
 	rprocessor "github.com/AlexBond702/catalog-service/internal/app/processor/http"
-	"github.com/AlexBond702/catalog-service/internal/app/processor/monitor"
+	"github.com/AlexBond702/catalog-service/internal/app/processor/monitor/metric"
 	pprocessor "github.com/AlexBond702/catalog-service/internal/app/processor/other"
 	"github.com/AlexBond702/catalog-service/internal/app/repository"
 	pcategory "github.com/AlexBond702/catalog-service/internal/app/repository/category"
@@ -202,7 +202,7 @@ func (b *Builder) BuildMonitorPrometheus() {
 			log.Warn().Msg("Prometheus metrics disabled")
 			return
 		}
-		prometheus := monitor.NewPrometheusObserver()
+		prometheus := metric.NewPrometheusObserver()
 		b.processors = append(b.processors, prometheus)
 	})
 }

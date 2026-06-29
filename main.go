@@ -7,11 +7,14 @@ import (
 	"github.com/urfave/cli/v2"
 
 	"github.com/AlexBond702/catalog-service/cmd"
+	"github.com/AlexBond702/catalog-service/internal/app/constant"
+	msentry "github.com/AlexBond702/catalog-service/internal/app/processor/monitor/sentry"
 )
 
 func main() {
+	defer msentry.Flush()
 	app := &cli.App{
-		Name:  "Catalog-Service",
+		Name:  constant.AppName,
 		Usage: "Catalog management service",
 		Commands: []*cli.Command{
 			cmd.Migrate(),
@@ -20,7 +23,7 @@ func main() {
 		Flags: []cli.Flag{
 			&cli.BoolFlag{Name: "no-json"},
 		},
-		Version: "1.00.00",
+		Version: constant.Version,
 	}
 	if err := app.Run(os.Args); err != nil {
 		_, _ = fmt.Fprintln(os.Stderr, err)

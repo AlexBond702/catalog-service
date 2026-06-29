@@ -64,7 +64,11 @@ func (m *middleware) Callback(next http.Handler) http.Handler {
 			TailFail    = " finished (or aborted) with error"
 		)
 		start := time.Now()
-		next.ServeHTTP(w, r)
+		sr := &statusRecorder{
+			ResponseWriter: w,
+			statusCode:     http.StatusOK,
+		}
+		next.ServeHTTP(sr, r)
 		err := httph.ErrorGet(r)
 		execTime := time.Since(start)
 
@@ -98,6 +102,17 @@ func (m *middleware) Callback(next http.Handler) http.Handler {
 		ev.Err(err).
 			Str("exec_time", execTime.String()).
 			Str("client_ip", r.RemoteAddr).
+			Int("http_status_code", sr.statusCode).
 			Msg(mb.String())
 	})
+}
+
+type statusRecorder struct {
+	http.ResponseWriter
+	statusCode int
+}
+
+func (r *statusRecorder) WriteHeader(code int) {
+	r.statusCode = code
+	r.ResponseWriter.WriteHeader(code)
 }
