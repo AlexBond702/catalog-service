@@ -3,6 +3,7 @@ package builder
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"reflect"
@@ -11,9 +12,11 @@ import (
 
 	"github.com/rs/zerolog/log"
 	"github.com/urfave/cli/v2"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gorilla/mux/otelmux"
 	"google.golang.org/grpc"
 
 	"github.com/AlexBond702/catalog-service/internal/app/config"
+	"github.com/AlexBond702/catalog-service/internal/app/constant"
 	"github.com/AlexBond702/catalog-service/internal/app/handler/grpc/catalog"
 	rhandler "github.com/AlexBond702/catalog-service/internal/app/handler/http"
 	hcategory "github.com/AlexBond702/catalog-service/internal/app/handler/http/category"
@@ -24,6 +27,7 @@ import (
 	"github.com/AlexBond702/catalog-service/internal/app/processor/gateway"
 	pgrpc "github.com/AlexBond702/catalog-service/internal/app/processor/grpc"
 	rprocessor "github.com/AlexBond702/catalog-service/internal/app/processor/http"
+	"github.com/AlexBond702/catalog-service/internal/app/processor/monitor"
 	pprocessor "github.com/AlexBond702/catalog-service/internal/app/processor/other"
 	"github.com/AlexBond702/catalog-service/internal/app/repository"
 	pcategory "github.com/AlexBond702/catalog-service/internal/app/repository/category"
@@ -32,6 +36,8 @@ import (
 	"github.com/AlexBond702/catalog-service/internal/app/service"
 	scategory "github.com/AlexBond702/catalog-service/internal/app/service/category"
 	sproduct "github.com/AlexBond702/catalog-service/internal/app/service/product"
+	"github.com/AlexBond702/catalog-service/internal/app/util"
+	"github.com/AlexBond702/catalog-service/internal/pkg/http/httph"
 )
 
 type Builder struct {
@@ -59,7 +65,8 @@ type Builder struct {
 
 	grpcCatalogHandler *catalog.Handler
 
-	processors []processor.Processor
+	processors  []processor.Processor
+	middlewares []httph.Middleware
 }
 
 func NewBuilder(cCtx *cli.Context) *Builder {
@@ -177,7 +184,7 @@ func (b *Builder) BuildHandlerGrpcCatalog() {
 
 func (b *Builder) BuildProcHttp() {
 	b.exec(true, func(b *Builder) {
-		procHttp := rprocessor.NewHttp(b.healthHandler, b.categoryHandler, b.productHandler, nil, b.cfg.Processor.WebServer)
+		procHttp := rprocessor.NewHttp(b.healthHandler, b.categoryHandler, b.productHandler, b.middlewares, b.cfg.Processor.WebServer)
 		b.processors = append(b.processors, procHttp)
 	}, b.productHandler, b.categoryHandler)
 }
@@ -204,6 +211,27 @@ func (b *Builder) BuildMonitorPrometheus() {
 		}
 		prometheus := metric.NewPrometheusObserver()
 		b.processors = append(b.processors, prometheus)
+	})
+}
+
+func (b *Builder) BuildMonitorOpenTelemetry() {
+	cfg := b.cfg.Monitor.OpenTelemetry
+	if !cfg.Enabled {
+		log.Warn().Msg("OpenTelemetry is disabled by config")
+		return
+	}
+	b.exec(true, func(b *Builder) {
+		proc, err := mmonitor.NewOpenTelemetryController(b.ctx, b.cfg.Monitor.Environment, cfg)
+		if err != nil {
+			b.err = fmt.Errorf("init OpenTelemetry: %w", err)
+			return
+		}
+		b.processors = append(b.processors, proc)
+		b.middlewares = append(b.middlewares, otelmux.Middleware(
+			constant.AppName,
+			otelmux.WithFilter(func(r *http.Request) bool {
+				return !util.IsFilteredHttpRoute(r)
+			})))
 	})
 }
 
