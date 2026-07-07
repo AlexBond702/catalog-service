@@ -47,7 +47,7 @@ func extractQuery(r *http.Request) any {
 func NewHttp(hHealth rhandler.Health,
 	hCategory rhandler.Category,
 	hProduct rhandler.Product,
-	_ []httph.Middleware,
+	middlewares []httph.Middleware,
 	cfg section.ProcessorWebServer,
 ) processor.Processor {
 	r := mux.NewRouter()
@@ -60,6 +60,8 @@ func NewHttp(hHealth rhandler.Health,
 		mzerolog.WithAnyExtractorOnFail("query", extractQuery),
 		mzerolog.WithAnyExtractorOnSuccess("content_length", extractContentLength),
 	)
+	r.Use(middlewaresToGorilla(middlewares)...)
+
 	r.Use(
 		httph.NewErrorMiddleware(),
 		logMW,
