@@ -10,10 +10,20 @@ import (
 
 type implBunIdbTxInjector struct {
 	fallback bun.IDB
+	sqlDB    *sql.DB
 }
 
-func newBunIdbTxInjector(orig bun.IDB) bun.IDB {
-	return &implBunIdbTxInjector{fallback: orig}
+func newBunIdbTxInjector(orig bun.IDB, sqlDB *sql.DB) bun.IDB {
+	return &implBunIdbTxInjector{
+		fallback: orig,
+		sqlDB:    sqlDB,
+	}
+}
+
+type sqlConn interface {
+	ExecContext(ctx context.Context, query string, args ...any) (sql.Result, error)
+	QueryContext(ctx context.Context, query string, args ...any) (*sql.Rows, error)
+	QueryRowContext(ctx context.Context, query string, args ...any) *sql.Row
 }
 
 func (x *implBunIdbTxInjector) getIdb(ctx context.Context) bun.IDB {
@@ -24,19 +34,27 @@ func (x *implBunIdbTxInjector) getIdb(ctx context.Context) bun.IDB {
 	return x.fallback
 }
 
+func (x *implBunIdbTxInjector) raw(ctx context.Context) sqlConn {
+	tx := getTxFromContext(ctx)
+	if tx.Tx != nil {
+		return tx.Tx
+	}
+	return x.sqlDB
+}
+
 func (x *implBunIdbTxInjector) QueryContext(ctx context.Context, query string, args ...interface{}) (*sql.Rows, error) {
-	getTx := x.getIdb(ctx)
-	return getTx.QueryContext(ctx, query, args)
+	getTx := x.raw(ctx)
+	return getTx.QueryContext(ctx, query, args...)
 }
 
 func (x *implBunIdbTxInjector) ExecContext(ctx context.Context, query string, args ...interface{}) (sql.Result, error) {
-	getTx := x.getIdb(ctx)
-	return getTx.ExecContext(ctx, query, args)
+	getTx := x.raw(ctx)
+	return getTx.ExecContext(ctx, query, args...)
 }
 
 func (x *implBunIdbTxInjector) QueryRowContext(ctx context.Context, query string, args ...interface{}) *sql.Row {
-	getTx := x.getIdb(ctx)
-	return getTx.QueryRowContext(ctx, query, args)
+	getTx := x.raw(ctx)
+	return getTx.QueryRowContext(ctx, query, args...)
 }
 
 func (x *implBunIdbTxInjector) NewSelect() *bun.SelectQuery {

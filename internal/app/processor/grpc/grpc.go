@@ -7,6 +7,7 @@ import (
 	"sync"
 
 	"github.com/rs/zerolog/log"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"google.golang.org/grpc"
 
 	pb "github.com/AlexBond702/catalog-service/gen/proto/catalog/v1"
@@ -49,7 +50,7 @@ func NewGrpc(handler catalog.Handler,
 
 	mprom.EnableHistogram()
 
-	server := grpc.NewServer(
+	server := grpc.NewServer(grpc.StatsHandler(otelgrpc.NewServerHandler()),
 		grpc.ChainUnaryInterceptor(unaryInterceptors...),
 		grpc.ChainStreamInterceptor(streamInterceptors...),
 	)
