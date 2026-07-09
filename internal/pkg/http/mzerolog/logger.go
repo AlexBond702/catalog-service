@@ -100,6 +100,7 @@ func (m *middleware) Callback(next http.Handler) http.Handler {
 		m.applyExtractors(r, ev, extString, extAny)
 
 		ev.Err(err).
+			Ctx(r.Context()).
 			Str("exec_time", execTime.String()).
 			Str("client_ip", r.RemoteAddr).
 			Int("http_status_code", sr.statusCode).

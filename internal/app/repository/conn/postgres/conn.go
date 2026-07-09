@@ -12,6 +12,7 @@ import (
 	"github.com/uptrace/bun"
 	"github.com/uptrace/bun/dialect/pgdialect"
 	"github.com/uptrace/bun/driver/pgdriver"
+	"github.com/uptrace/bun/extra/bunotel"
 	"github.com/uptrace/bun/migrate"
 
 	"github.com/AlexBond702/catalog-service/internal/app/config/section"
@@ -53,7 +54,13 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 	)
 	sqlDB := sql.OpenDB(sqlConnect)
 	sqlDB.SetMaxOpenConns(10)
-	rawBunDb := bun.NewDB(sqlDB, pgdialect.New(), bun.WithDiscardUnknownColumns())
+	rawBunDb := bun.NewDB(
+		sqlDB,
+		pgdialect.New(),
+		bun.WithDiscardUnknownColumns()).
+		WithQueryHook(bunotel.NewQueryHook(
+			bunotel.WithDBName(cfg.Db),
+			bunotel.WithFormattedQueries(true)))
 	newCtx, cancel := context.WithTimeout(ctx, 2*time.Second)
 	defer cancel()
 
@@ -61,7 +68,7 @@ func NewConn(ctx context.Context, cfg section.RepositoryPostgres) (*Client, erro
 		return nil,
 			fmt.Errorf("failed connection ping: %w", err)
 	}
-	bunDb := newBunIdbTxInjector(rawBunDb)
+	bunDb := newBunIdbTxInjector(rawBunDb, sqlDB)
 	c := Client{
 		_bunDB:   bunDb,
 		rawBunDB: rawBunDb,
