@@ -35,7 +35,7 @@ func vGenericRegPprof(r *mux.Router) {
 }
 
 func pprofIndex(w http.ResponseWriter, r *http.Request) {
-	http.Redirect(w, r, "debug/pprof/", http.StatusMovedPermanently)
+	http.Redirect(w, r, "/debug/pprof/", http.StatusMovedPermanently)
 }
 
 func handlerNotFound(w http.ResponseWriter, _ *http.Request) {
