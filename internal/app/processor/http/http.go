@@ -70,6 +70,7 @@ func NewHttp(hHealth rhandler.Health,
 
 	r.NotFoundHandler = http.HandlerFunc(handlerNotFound)
 	vGenericRegHealthCheck(r, hHealth)
+	vGenericRegPprof(r)
 	vGenericRegMetrics(r)
 	rV1 := r.PathPrefix("/v1").Subrouter()
 	if hCategory != nil {
